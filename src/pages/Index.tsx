@@ -18,6 +18,7 @@ interface NPC {
   dialogue: string[];
   currentDialogue: number;
   color: string;
+  size?: number;
 }
 
 interface Chapter {
@@ -37,6 +38,7 @@ interface GameState {
   currentChapter: number;
   zoom: number;
   showTransition: boolean;
+  cameraOffset: Position;
 }
 
 const Index = () => {
@@ -45,13 +47,14 @@ const Index = () => {
   const [touchStart, setTouchStart] = useState<Position>({ x: 0, y: 0 });
   const [joystickActive, setJoystickActive] = useState(false);
   const [gameState, setGameState] = useState<GameState>({
-    playerPos: { x: 150, y: 300 },
+    playerPos: { x: 400, y: 300 },
     velocity: { x: 0, y: 0 },
     currentNPC: null,
     dialogueActive: false,
     currentChapter: 0,
     zoom: 1,
     showTransition: false,
+    cameraOffset: { x: 0, y: 0 },
   });
 
   const chapters: Chapter[] = [
@@ -60,10 +63,10 @@ const Index = () => {
       title: 'Глава 1: Жуткий Отель',
       background: 'linear-gradient(to bottom, #1a0a3e, #2d1b5e, #4a2d7a)',
       backgroundImage: 'https://cdn.poehali.dev/files/cfa15ddf-afb6-4415-b6a8-a2b2d0ffaee4.png',
-      playerStartPos: { x: 150, y: 300 },
+      playerStartPos: { x: 400, y: 300 },
       npc: {
         id: 'taph',
-        x: 700,
+        x: 900,
         y: 300,
         image: 'https://cdn.poehali.dev/files/0215a9d0-dad0-40a7-b5fd-8e8ff751f922.png',
         name: 'Taph',
@@ -75,18 +78,20 @@ const Index = () => {
         ],
         currentDialogue: 0,
         color: '#FFD700',
+        size: 120,
       },
     },
     {
       id: 1,
-      title: 'Глава 2: Хрустальное Озеро',
+      title: 'Глава 2: Тёмный Лес',
       background: 'linear-gradient(to bottom, #0f2027, #203a43, #2c5364)',
-      playerStartPos: { x: 150, y: 300 },
+      backgroundImage: 'https://cdn.poehali.dev/files/e1fcdd0e-47a4-4e1e-bd60-5a7fc2ec41fc.jpg',
+      playerStartPos: { x: 400, y: 300 },
       npc: {
         id: 'jason',
-        x: 700,
-        y: 280,
-        emoji: '🔪',
+        x: 900,
+        y: 300,
+        image: 'https://cdn.poehali.dev/files/cb55b7a4-dfa6-4e12-a170-bdb7275bd96a.png',
         name: 'Jason Voorhees',
         dialogue: [
           'ki ki ki ma ma ma...',
@@ -95,19 +100,21 @@ const Index = () => {
           '*Jason разочарованно уходит в лес*',
         ],
         currentDialogue: 0,
-        color: '#4A5568',
+        color: '#8B4513',
+        size: 140,
       },
     },
     {
       id: 2,
       title: 'Глава 3: Пустота',
       background: 'linear-gradient(to bottom, #000000, #0a0a0a, #1a1a1a)',
-      playerStartPos: { x: 500, y: 400 },
+      backgroundImage: 'https://cdn.poehali.dev/files/04478063-75ed-4739-870d-2bf98b5be506.jpg',
+      playerStartPos: { x: 400, y: 300 },
       npc: {
         id: 'gaster',
-        x: 500,
-        y: 250,
-        emoji: '👤',
+        x: 900,
+        y: 300,
+        image: 'https://cdn.poehali.dev/files/ff435001-b9a8-4dee-89c8-4f2f1a8562e4.png',
         name: 'W.D. Gaster',
         dialogue: [
           '✋︎ ⧫︎♒︎♓︎■︎🙵 ⍓︎□︎◆︎🕯︎❒︎♏︎ ♋︎ ●︎♓︎⧫︎⧫︎●︎♏︎ □︎◆︎⧫︎ □︎♐︎ ⧫︎□︎◆︎♍︎♒︎...',
@@ -116,19 +123,20 @@ const Index = () => {
           '*Темнота окружает... Гастер отправляет вас обратно*',
         ],
         currentDialogue: 0,
-        color: '#9333EA',
+        color: '#FFFFFF',
+        size: 120,
       },
     },
     {
       id: 3,
       title: 'Глава 4: Королевство Печенья',
       background: 'linear-gradient(to bottom, #ffd89b, #19547b)',
-      playerStartPos: { x: 150, y: 300 },
+      playerStartPos: { x: 400, y: 300 },
       npc: {
         id: 'knox',
-        x: 700,
-        y: 280,
-        emoji: '🐴',
+        x: 900,
+        y: 300,
+        image: 'https://cdn.poehali.dev/files/1f5e858f-a7f3-40ac-bdc4-ebc6e1dc752a.jpg',
         name: 'Нокс',
         dialogue: [
           'Наконец-то! Silent Salt, я могу тебя научить!',
@@ -140,6 +148,7 @@ const Index = () => {
         ],
         currentDialogue: 0,
         color: '#F97316',
+        size: 140,
       },
     },
   ];
@@ -192,22 +201,33 @@ const Index = () => {
       let newVelX = 0;
       let newVelY = 0;
 
-      if (keysPressed.current.has('ArrowLeft')) newVelX -= 3;
-      if (keysPressed.current.has('ArrowRight')) newVelX += 3;
-      if (keysPressed.current.has('ArrowUp')) newVelY -= 3;
-      if (keysPressed.current.has('ArrowDown')) newVelY += 3;
+      if (keysPressed.current.has('ArrowLeft')) newVelX -= 4;
+      if (keysPressed.current.has('ArrowRight')) newVelX += 4;
+      if (keysPressed.current.has('ArrowUp')) newVelY -= 4;
+      if (keysPressed.current.has('ArrowDown')) newVelY += 4;
 
       if (joystickActive) {
         newVelX += gameState.velocity.x;
         newVelY += gameState.velocity.y;
       }
 
+      const newPlayerPos = {
+        x: Math.max(100, Math.min(1400, gameState.playerPos.x + newVelX)),
+        y: Math.max(100, Math.min(700, gameState.playerPos.y + newVelY)),
+      };
+
+      const screenCenterX = window.innerWidth / 2;
+      const screenCenterY = window.innerHeight / 2;
+
+      const newCameraOffset = {
+        x: screenCenterX - newPlayerPos.x,
+        y: screenCenterY - newPlayerPos.y,
+      };
+
       setGameState((prev) => ({
         ...prev,
-        playerPos: {
-          x: Math.max(20, Math.min(980, prev.playerPos.x + newVelX)),
-          y: Math.max(20, Math.min(580, prev.playerPos.y + newVelY)),
-        },
+        playerPos: newPlayerPos,
+        cameraOffset: newCameraOffset,
       }));
 
       if (keysPressed.current.has(' ')) {
@@ -216,7 +236,7 @@ const Index = () => {
     }, 1000 / 60);
 
     return () => clearInterval(gameLoop);
-  }, [gameState.dialogueActive, joystickActive]);
+  }, [gameState.dialogueActive, joystickActive, gameState.playerPos]);
 
   const checkNPCInteraction = () => {
     const distance = Math.sqrt(
@@ -224,7 +244,7 @@ const Index = () => {
         Math.pow(npcState.y - gameState.playerPos.y, 2)
     );
 
-    if (distance < 100 && !gameState.dialogueActive) {
+    if (distance < 150 && !gameState.dialogueActive) {
       setGameState((prev) => ({
         ...prev,
         currentNPC: npcState.id,
@@ -247,8 +267,8 @@ const Index = () => {
     setGameState((prev) => ({
       ...prev,
       velocity: {
-        x: (deltaX / magnitude) * normalizedMag * 4,
-        y: (deltaY / magnitude) * normalizedMag * 4,
+        x: (deltaX / magnitude) * normalizedMag * 5,
+        y: (deltaY / magnitude) * normalizedMag * 5,
       },
     }));
   };
@@ -274,11 +294,11 @@ const Index = () => {
       );
 
       const prevDistance = (e as any).prevDistance || distance;
-      const zoomDelta = (distance - prevDistance) * 0.01;
+      const zoomDelta = (distance - prevDistance) * 0.005;
 
       setGameState((prev) => ({
         ...prev,
-        zoom: Math.max(0.5, Math.min(2, prev.zoom + zoomDelta)),
+        zoom: Math.max(0.7, Math.min(1.5, prev.zoom + zoomDelta)),
       }));
 
       (e as any).prevDistance = distance;
@@ -321,7 +341,7 @@ const Index = () => {
     Math.pow(npcState.x - gameState.playerPos.x, 2) +
       Math.pow(npcState.y - gameState.playerPos.y, 2)
   );
-  const isNear = distance < 100;
+  const isNear = distance < 150;
 
   return (
     <div className="w-full h-screen overflow-hidden font-[Rubik] relative">
@@ -331,8 +351,11 @@ const Index = () => {
       >
         {currentChapter.backgroundImage && (
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-70"
-            style={{ backgroundImage: `url(${currentChapter.backgroundImage})` }}
+            className="absolute inset-0 bg-cover bg-center opacity-60"
+            style={{
+              backgroundImage: `url(${currentChapter.backgroundImage})`,
+              transform: `translate(${gameState.cameraOffset.x * 0.3}px, ${gameState.cameraOffset.y * 0.3}px)`,
+            }}
           />
         )}
       </div>
@@ -347,62 +370,73 @@ const Index = () => {
 
       <div
         ref={canvasRef}
-        className="relative w-full h-full transition-transform duration-200"
+        className="relative w-full h-full transition-transform duration-100"
         style={{ transform: `scale(${gameState.zoom})` }}
         onTouchMove={handlePinchZoom}
       >
         <div
-          className="absolute w-16 h-16 transition-all duration-100 flex items-center justify-center z-10"
+          className="absolute inset-0 transition-transform duration-100"
           style={{
-            left: `${gameState.playerPos.x}px`,
-            top: `${gameState.playerPos.y}px`,
-            transform: 'translate(-50%, -50%)',
+            transform: `translate(${gameState.cameraOffset.x}px, ${gameState.cameraOffset.y}px)`,
           }}
         >
-          <div className="relative">
-            <div className="absolute -inset-4 bg-purple-500/20 rounded-full animate-pulse"></div>
-            <img
-              src="https://cdn.poehali.dev/files/64662605-b010-4a74-bee1-0d251cf9ca9d.png"
-              alt="Silent Salt"
-              className="w-16 h-16 object-contain drop-shadow-lg"
-            />
-          </div>
-        </div>
-
-        <div
-          className="absolute transition-all duration-200 z-10"
-          style={{
-            left: `${npcState.x}px`,
-            top: `${npcState.y}px`,
-            transform: 'translate(-50%, -50%)',
-          }}
-        >
-          <div className="relative">
-            {isNear && (
-              <div className="absolute -top-12 left-1/2 -translate-x-1/2 animate-bounce">
-                <Icon name="MessageCircle" className="text-yellow-500" size={24} />
-              </div>
-            )}
-            {npcState.image ? (
+          <div
+            className="absolute w-32 h-32 transition-all duration-100 flex items-center justify-center z-10"
+            style={{
+              left: `${gameState.playerPos.x}px`,
+              top: `${gameState.playerPos.y}px`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <div className="relative">
+              <div className="absolute -inset-6 bg-purple-500/30 rounded-full animate-pulse"></div>
               <img
-                src={npcState.image}
-                alt={npcState.name}
-                className="w-24 h-24 object-contain drop-shadow-xl transition-transform hover:scale-110"
-                style={{ filter: `drop-shadow(0 0 20px ${npcState.color})` }}
+                src="https://cdn.poehali.dev/files/64662605-b010-4a74-bee1-0d251cf9ca9d.png"
+                alt="Silent Salt"
+                className="w-32 h-32 object-contain drop-shadow-2xl"
               />
-            ) : (
+            </div>
+          </div>
+
+          <div
+            className="absolute transition-all duration-200 z-10"
+            style={{
+              left: `${npcState.x}px`,
+              top: `${npcState.y}px`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <div className="relative">
+              {isNear && (
+                <div className="absolute -top-16 left-1/2 -translate-x-1/2 animate-bounce">
+                  <Icon name="MessageCircle" className="text-yellow-400" size={32} />
+                </div>
+              )}
+              {npcState.image ? (
+                <img
+                  src={npcState.image}
+                  alt={npcState.name}
+                  className="object-contain drop-shadow-2xl transition-transform hover:scale-105"
+                  style={{
+                    width: `${npcState.size || 120}px`,
+                    height: `${npcState.size || 120}px`,
+                    filter: `drop-shadow(0 0 30px ${npcState.color})`,
+                  }}
+                />
+              ) : (
+                <div
+                  className="text-8xl drop-shadow-2xl transition-transform hover:scale-105"
+                  style={{ filter: `drop-shadow(0 0 30px ${npcState.color})` }}
+                >
+                  {npcState.emoji}
+                </div>
+              )}
               <div
-                className="text-6xl drop-shadow-xl transition-transform hover:scale-110"
-                style={{ filter: `drop-shadow(0 0 20px ${npcState.color})` }}
+                className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-sm font-bold whitespace-nowrap px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: npcState.color, color: 'white' }}
               >
-                {npcState.emoji}
+                {npcState.name}
               </div>
-            )}
-            <div
-              className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold whitespace-nowrap px-2 py-1 rounded-full"
-              style={{ backgroundColor: npcState.color, color: 'white' }}
-            >
-              {npcState.name}
             </div>
           </div>
         </div>
@@ -430,12 +464,12 @@ const Index = () => {
                 <img
                   src={npcState.image}
                   alt={npcState.name}
-                  className="w-16 h-16 object-contain"
+                  className="w-20 h-20 object-contain flex-shrink-0"
                   style={{ filter: `drop-shadow(0 0 10px ${npcState.color})` }}
                 />
               ) : (
                 <div
-                  className="text-5xl"
+                  className="text-6xl flex-shrink-0"
                   style={{ filter: `drop-shadow(0 0 10px ${npcState.color})` }}
                 >
                   {npcState.emoji}
